@@ -88,7 +88,12 @@ Check ((Get-Content -LiteralPath $configPath -TotalCount 1) -eq 'default_model =
 Check ((Path-Count) -eq 1) 'install dir still on the user PATH once'
 Check ((Doctor) -eq 0) 'kimi doctor config still accepts the config'
 
-Run-Setup @('-NoPrompt', '-SkipKeyCheck', '-CloseRouterKey', '-')
+# A lone '-' cannot go through powershell.exe -File (it is read as a parameter name, and
+# powershell.exe exits before the script runs), so this run binds it in-process.
+Write-Host ''
+Write-Host '>> setup.ps1 -NoPrompt -SkipKeyCheck -CloseRouterKey - (in-process)'
+& $setup -NoPrompt -SkipKeyCheck -CloseRouterKey '-'
+if ($LASTEXITCODE -ne 0) { throw "setup.ps1 -CloseRouterKey - exited with $LASTEXITCODE" }
 Check (-not (User-Env 'CLOSEROUTER_API_KEY')) 'CloseRouter key removed'
 Check ((Marker-Count) -eq 2) 'CloseRouter refresh disabled again'
 Check ((Doctor) -eq 0) 'kimi doctor config accepts the config again'
